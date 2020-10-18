@@ -554,15 +554,33 @@ out vec4 color;
 
 uniform vec3 rgbMaxValue;
 uniform sampler2D bayerPattern;
-vec3 dither(vec3 c)
+
+const vec3 gamma=vec3(2.2);
+vec3 toLinearRGB(vec3 sRGB)
 {
-    if(rgbMaxValue.r==0.) return c;
+    return pow(sRGB,gamma);
+}
+vec3 toSRGB(vec3 linearRGB)
+{
+    return pow(linearRGB,1/gamma);
+}
+
+vec3 dither(const vec3 inColor)
+{
+    if(rgbMaxValue.r==0.) return inColor;
     vec3 bayer=texture2D(bayerPattern,gl_FragCoord.xy/8.).rrr;
 
-    vec3 rgb=c*rgbMaxValue;
-    vec3 head=floor(rgb);
-    vec3 tail=rgb-head;
-    return (head+1.-step(tail,bayer))/rgbMaxValue;
+    vec3 lowerSRGB = floor(inColor*rgbMaxValue);
+    vec3 upperSRGB = ceil (inColor*rgbMaxValue);
+    upperSRGB += 1-(upperSRGB-lowerSRGB); // Make sure we don't divide by 0 for exact sRGB values of inColor
+
+    vec3 lower = toLinearRGB(lowerSRGB/rgbMaxValue);
+    vec3 upper = toLinearRGB(upperSRGB/rgbMaxValue);
+
+    vec3 delta = upper-lower; // Linear-RGB difference between nearest representable colors
+    vec3 extra = toLinearRGB(inColor) - lower; // Extra (linear-RGB) intensity to add to lower to get inColor
+
+    return toSRGB(lower + delta*step(bayer, extra/delta));
 }
 
 void main()
@@ -572,7 +590,7 @@ void main()
                               vec3(-0.4986,0.0415,1.057));
     vec3 XYZ=texture(luminanceXYZW, texCoord).xyz;
     vec3 rgb=XYZ2sRGBl*XYZ;
-    vec3 srgb=pow(rgb*exposure, vec3(1/2.2));
+    vec3 srgb=toSRGB(rgb*exposure);
     color=vec4(dither(srgb),1);
 }
 )");
