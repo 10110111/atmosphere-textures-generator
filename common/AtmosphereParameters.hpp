@@ -43,11 +43,21 @@ struct AtmosphereParameters
             return crossSectionAt1um*pow(wavelengths/refWL, glm::vec4(-angstromExponent));
         }
     };
+    struct Vec4Spectrum
+    {
+        std::vector<glm::vec4> values;
+        QString filename; // non-empty if the values were loaded from file
+
+        bool empty() const { return values.empty(); }
+        auto size() const { return values.size(); }
+        decltype(auto) operator[](const std::size_t n)       { return values[n]; }
+        decltype(auto) operator[](const std::size_t n) const { return values[n]; }
+    };
     struct Absorber
     {
         QString numberDensity;
         QString name;
-        std::vector<glm::vec4> absorptionCrossSection;
+        Vec4Spectrum absorptionCrossSection;
 
         AtmosphereParameters const& atmo;
 
@@ -69,8 +79,9 @@ struct AtmosphereParameters
     };
 
     QString descriptionFileText;
+    QString descriptionFileDir;
     std::vector<glm::vec4> allWavelengths;
-    std::vector<glm::vec4> solarIrradianceAtTOA;
+    Vec4Spectrum solarIrradianceAtTOA;
     std::string textureOutputDir=".";
     GLint transmittanceTexW, transmittanceTexH;
     GLint irradianceTexW, irradianceTexH;
@@ -91,7 +102,7 @@ struct AtmosphereParameters
     GLfloat sunAngularRadius; // calculated from earthSunDistance
     float lengthOfHorizRayFromGroundToBorderOfAtmo; // calculated from atmosphereHeight and earthRadius
     // moonAngularRadius is calculated from earthMoonDistance and other parameters on the fly, so isn't kept here
-    std::vector<glm::vec4> groundAlbedo;
+    Vec4Spectrum groundAlbedo;
     std::vector<Scatterer> scatterers;
     std::vector<Absorber> absorbers;
     bool allTexturesAreRadiance=false;

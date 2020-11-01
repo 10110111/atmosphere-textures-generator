@@ -171,17 +171,23 @@ QString readGLSLFunctionBody(QTextStream& stream, const QString filename, int& l
     return function;
 }
 
-std::vector<glm::vec4> getSpectrum(std::vector<glm::vec4> const& allWavelengths, QString const& line, const GLfloat min, const GLfloat max,
-                                 QString const& filename, const int lineNumber, const bool checkSize=true)
+AtmosphereParameters::Vec4Spectrum getSpectrum(std::vector<glm::vec4> const& allWavelengths, QString const& line,
+                                           const GLfloat min, const GLfloat max,
+                                           QString const& filename, const int lineNumber, const bool checkSize=true)
 {
     if(line.startsWith("file "))
     {
         if(allWavelengths.empty())
             throw ParsingFailure{filename,lineNumber,"error: tried to read a spectrum file without having read list of wavelengths"};
         auto path=line.mid(5);
+
         const QFileInfo fi(path);
+        AtmosphereParameters::Vec4Spectrum output;
         if(!fi.isAbsolute())
+        {
+            output.filename=path; // to be copied to destination at the same level. FIXME: what if it begins with a ".."?
             path=QFileInfo(filename).absolutePath()+"/"+path;
+        }
         QFile file(path);
         if(!file.open(QFile::ReadOnly))
             throw ParsingFailure{filename,lineNumber,QString("failed to open the file \"%1\": %2").arg(path).arg(file.errorString())};
@@ -190,9 +196,8 @@ std::vector<glm::vec4> getSpectrum(std::vector<glm::vec4> const& allWavelengths,
                                                       allWavelengths.back()[AtmosphereParameters::pointsPerWavelengthItem-1],
                                                       allWavelengths.size()*AtmosphereParameters::pointsPerWavelengthItem);
         const auto& values=spectrum.values;
-        std::vector<glm::vec4> output;
         for(unsigned i=0; i<values.size(); i+=4)
-            output.emplace_back(values[i+0], values[i+1], values[i+2], values[i+3]);
+            output.values.emplace_back(values[i+0], values[i+1], values[i+2], values[i+3]);
         return output;
     }
     const auto items=line.split(',');
@@ -219,9 +224,9 @@ std::vector<glm::vec4> getSpectrum(std::vector<glm::vec4> const& allWavelengths,
                                                         .arg(i+1).arg(value).arg(max)};
         values.emplace_back(value);
     }
-    std::vector<glm::vec4> spectrum;
+    AtmosphereParameters::Vec4Spectrum spectrum;
     for(unsigned i=0; i<values.size(); i+=4)
-        spectrum.emplace_back(values[i+0], values[i+1], values[i+2], values[i+3]);
+        spectrum.values.emplace_back(values[i+0], values[i+1], values[i+2], values[i+3]);
     return spectrum;
 }
 
@@ -384,6 +389,7 @@ void AtmosphereParameters::parse(QString const& atmoDescrFileName)
         std::cerr << "Failed to open atmosphere description file: " << atmoDescr.errorString() << '\n';
         throw MustQuit{};
     }
+    descriptionFileDir=QFileInfo(atmoDescr).absolutePath();
     descriptionFileText=atmoDescr.readAll();
     QTextStream stream(&descriptionFileText, QIODevice::ReadOnly);
     int lineNumber=1;
@@ -525,6 +531,6 @@ void AtmosphereParameters::parse(QString const& atmoDescrFileName)
     if(groundAlbedo.empty())
     {
         std::cerr << "Warning: ground albedo was not specified, assuming 100% white.\n";
-        groundAlbedo=std::vector<glm::vec4>(allWavelengths.size(), glm::vec4(1));
+        groundAlbedo={std::vector<glm::vec4>(allWavelengths.size(), glm::vec4(1)), ""};
     }
 }

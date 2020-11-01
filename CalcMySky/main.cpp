@@ -998,6 +998,30 @@ int main(int argc, char** argv)
                 throw MustQuit{};
             }
             std::cerr << " done\n";
+
+            std::vector<QString> filesToCopy;
+            if(!atmo.solarIrradianceAtTOA.filename.isEmpty())
+                filesToCopy.emplace_back(atmo.solarIrradianceAtTOA.filename);
+            if(!atmo.groundAlbedo.filename.isEmpty())
+                filesToCopy.emplace_back(atmo.groundAlbedo.filename);
+            for(const auto& abs : atmo.absorbers)
+                if(!abs.absorptionCrossSection.filename.isEmpty())
+                    filesToCopy.emplace_back(abs.absorptionCrossSection.filename);
+
+            for(auto& srcFileName : filesToCopy)
+            {
+                const auto destPath=QString::fromStdString(atmo.textureOutputDir)+'/'+srcFileName;
+                std::cerr << "Copying \"" << srcFileName << "\" to \"" << destPath << "\"...";
+                const auto destDir=QFileInfo(destPath).absolutePath();
+                createDirs(destDir.toStdString());
+                QFile file(atmo.descriptionFileDir+'/'+srcFileName);
+                if(!file.copy(destPath))
+                {
+                    std::cerr << " FAILED : " << file.errorString() << "\n";
+                    throw MustQuit{};
+                }
+                std::cerr << " done\n";
+            }
         }
 
         QSurfaceFormat format;
