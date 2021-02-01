@@ -195,6 +195,14 @@ in vec3 position;
 uniform float zoomFactor;
 uniform mat3 cameraRotation;
 const float PI=3.1415926535897932;
+float sin(float x)
+{
+    return x*(0.999999599920672 + x*x*(-0.166665526354071 + x*x*(0.00833240298869917 + x*x*(-0.0001980863334175 + x*x*(2.69971463693744e-6 - 2.03622449118901e-8*x*x)))));
+}
+float cos(float x)
+{
+    return 0.999999210782322 + x*x*(-0.499994213384716 + x*x*(0.0416597778065509 + x*x*(-0.00138587899196014 + x*x*(0.0000242029413673591 - 2.19729638194131e-7*x*x))));
+}
 vec3 calcViewDir()
 {
     vec2 pos=position.xy/zoomFactor;
