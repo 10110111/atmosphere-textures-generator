@@ -453,6 +453,10 @@ void AtmosphereParameters::parse(QString const& atmoDescrFileName, const SkipSpe
             eclipsedDoubleScatteringTextureSize[1]=getUInt(value,1,GLSIZEI_MAX, atmoDescrFileName, lineNumber);
         else if(key=="eclipsed double scattering texture size for sza")
             eclipsedDoubleScatteringTextureSize[2]=getUInt(value,1,GLSIZEI_MAX, atmoDescrFileName, lineNumber);
+        else if(key=="light pollution texture size for vza")
+            lightPollutionTextureSize[0]=getUInt(value,1,GLSIZEI_MAX, atmoDescrFileName, lineNumber);
+        else if(key=="light pollution texture size for altitude")
+            lightPollutionTextureSize[1]=getUInt(value,1,GLSIZEI_MAX, atmoDescrFileName, lineNumber);
         else if(key=="eclipsed double scattering number of azimuth pairs to sample")
             eclipsedDoubleScatteringNumberOfAzimuthPairsToSample=getUInt(value,1,GLSIZEI_MAX, atmoDescrFileName, lineNumber);
         else if(key=="eclipsed double scattering number of elevation pairs to sample")
@@ -477,6 +481,11 @@ void AtmosphereParameters::parse(QString const& atmoDescrFileName, const SkipSpe
         {
             if(!skipSpectra)
                 solarIrradianceAtTOA=getSpectrum(allWavelengths,value,0,1e3,atmoDescrFileName,lineNumber);
+        }
+        else if(key=="light pollution radiance")
+        {
+            if(!skipSpectra)
+                lightPollutionRadiance=getSpectrum(allWavelengths,value,0,1e3,atmoDescrFileName,lineNumber);
         }
         else if(key.contains(scattererDescriptionKey))
         {
@@ -515,6 +524,12 @@ void AtmosphereParameters::parse(QString const& atmoDescrFileName, const SkipSpe
     if(solarIrradianceAtTOA.empty() && !skipSpectra)
     {
         throw DataLoadError{"Solar irradiance at TOA isn't specified in atmosphere description"};
+    }
+    if(lightPollutionRadiance.empty() && !skipSpectra)
+    {
+        qWarning() << "Light pollution radiance is not specified, assuming zero ground radiance";
+        lightPollutionRadiance.clear();
+        lightPollutionRadiance.resize(solarIrradianceAtTOA.size());
     }
     if(groundAlbedo.empty() && !skipSpectra)
     {

@@ -64,12 +64,14 @@ struct AtmosphereParameters
     QString descriptionFileText;
     std::vector<glm::vec4> allWavelengths;
     std::vector<glm::vec4> solarIrradianceAtTOA;
+    std::vector<glm::vec4> lightPollutionRadiance;
     std::string textureOutputDir=".";
     GLint transmittanceTexW, transmittanceTexH;
     GLint irradianceTexW, irradianceTexH;
     glm::ivec4 scatteringTextureSize;
     glm::ivec2 eclipsedSingleScatteringTextureSize;
     glm::ivec4 eclipsedDoubleScatteringTextureSize;
+    glm::ivec2 lightPollutionTextureSize;
     unsigned eclipsedDoubleScatteringNumberOfAzimuthPairsToSample;
     unsigned eclipsedDoubleScatteringNumberOfElevationPairsToSample;
     unsigned scatteringOrdersToCompute;

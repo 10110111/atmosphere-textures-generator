@@ -35,6 +35,7 @@ const vec4 scatteringTextureSize=)" + toString(glm::vec4(atmo.scatteringTextureS
 const vec2 irradianceTextureSize=)" + toString(glm::vec2(atmo.irradianceTexW, atmo.irradianceTexH)) + R"(;
 const vec2 transmittanceTextureSize=)" + toString(glm::vec2(atmo.transmittanceTexW,atmo.transmittanceTexH)) + R"(;
 const vec2 eclipsedSingleScatteringTextureSize=)" + toString(glm::vec2(atmo.eclipsedSingleScatteringTextureSize)) +R"(;
+const vec2 lightPollutionTextureSize=)" + toString(glm::vec2(atmo.lightPollutionTextureSize)) +R"(;
 const int radialIntegrationPoints=)" + toString(atmo.radialIntegrationPoints) + R"(;
 const int angularIntegrationPoints=)" + toString(atmo.angularIntegrationPoints) + R"(;
 const int eclipseAngularIntegrationPoints=)" + toString(atmo.eclipseAngularIntegrationPoints) + R"(;
@@ -45,6 +46,7 @@ const int numTransmittanceIntegrationPoints=)" + toString(atmo.numTransmittanceI
     const auto wlI=atmo.wavelengthsIndex(wavelengths);
     header += "const vec4 groundAlbedo="+toString(atmo.groundAlbedo[wlI])+";\n";
     header += "const vec4 solarIrradianceAtTOA="+toString(atmo.solarIrradianceAtTOA[wlI])+";\n";
+    header += "const vec4 lightPollutionRadiance="+toString(atmo.lightPollutionRadiance[wlI])+";\n";
 
     header+="#endif\n"; // close the include guard
     virtualHeaderFiles[CONSTANTS_HEADER_FILENAME]=header;

@@ -398,3 +398,39 @@ vec4 sampleEclipseDoubleScattering4DTexture(sampler3D texLower, sampler3D texUpp
 
     return mix(lower,upper,eclipsedDoubleScatteringAltitudeAlphaUpper);
 }
+
+LightPollutionTexVars scatteringTexIndicesToLightPollutionTexVars(const vec2 texIndices)
+{
+    const vec2 indexMax=lightPollutionTextureSize-vec2(1);
+
+    const float altitudeURCoord = texIndices[1] / (indexMax[1]-1);
+    const float distToHorizon = altitudeURCoord*LENGTH_OF_HORIZ_RAY_FROM_GROUND_TO_BORDER_OF_ATMO;
+    // Rounding errors can result in altitude>max, breaking the code after this calculation, so we have to clamp.
+    const float altitude=clampAltitude(sqrt(sqr(distToHorizon)+sqr(earthRadius))-earthRadius);
+
+    const bool viewRayIntersectsGround = texIndices[0] < indexMax[0]/2;
+    const float cosViewZenithAngleCoord = viewRayIntersectsGround ?
+                                   1-2*texIndices[0]/(indexMax[0]-1) :
+                                   2*(texIndices[0]-1)/(indexMax[0]-1)-1;
+    // ------------------------------------
+    float cosViewZenithAngle;
+    if(viewRayIntersectsGround)
+    {
+        const float distMin=altitude;
+        const float distMax=distToHorizon;
+        const float distToGround=cosViewZenithAngleCoord*(distMax-distMin)+distMin;
+        cosViewZenithAngle = distToGround==0 ? -1 :
+            clampCosine(-(sqr(distToHorizon)+sqr(distToGround)) / (2*distToGround*(altitude+earthRadius)));
+    }
+    else
+    {
+        const float distMin=atmosphereHeight-altitude;
+        const float distMax=distToHorizon+LENGTH_OF_HORIZ_RAY_FROM_GROUND_TO_BORDER_OF_ATMO;
+        const float distToTopAtmoBorder=cosViewZenithAngleCoord*(distMax-distMin)+distMin;
+        cosViewZenithAngle = distToTopAtmoBorder==0 ? 1 :
+            clampCosine((sqr(LENGTH_OF_HORIZ_RAY_FROM_GROUND_TO_BORDER_OF_ATMO)-sqr(distToHorizon)-sqr(distToTopAtmoBorder)) /
+                        (2*distToTopAtmoBorder*(altitude+earthRadius)));
+    }
+
+    return LightPollutionTexVars(altitude, cosViewZenithAngle, viewRayIntersectsGround);
+}

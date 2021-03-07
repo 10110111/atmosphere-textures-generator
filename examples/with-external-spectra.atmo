@@ -18,6 +18,9 @@ eclipsed double scattering texture size for SZA: 16
 eclipsed double scattering number of azimuth pairs to sample: 2
 eclipsed double scattering number of elevation pairs to sample: 10
 
+light pollution texture size for VZA: 128
+light pollution texture size for altitude: 64
+
 transmittance integration points: 500
 radial integration points: 50
 angular integration points: 512
@@ -39,6 +42,11 @@ solar irradiance at TOA: file spectra/solar-irradiance-at-toa.csv
 #  http://gsp.humboldt.edu/OLM/Courses/GSP_216_Online/lesson2-1/reflect.csv
 # The data set chosen is that for grass.
 ground albedo: file spectra/ground-albedo-grass.csv
+# These data have been digitized from Fig 2. in NBS Technical note 594-14 by Minggao He and Robert J. Bruening., "High
+# Pressure Sodium Discharge Lamp Characterization for Use as Standards of Geometrically Total Luminous Flux".
+# Amplitude is normalized so that luminance is 1.0.
+# TODO: find a better source - without manual digitization from a printed plot.
+light pollution radiance: file spectra/hps-lamp-spectrum.csv
 
 Scatterer "molecules": # Rayleigh scattering
 {

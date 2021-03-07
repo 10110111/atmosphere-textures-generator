@@ -45,4 +45,12 @@ vec4 sampleEclipseDoubleScattering4DTexture(sampler3D texLower, sampler3D texUpp
                                             const float cosViewZenithAngle, const float azimuthRelativeToSun,
                                             const float altitude, const bool viewRayIntersectsGround);
 
+struct LightPollutionTexVars
+{
+    float altitude;
+    float cosViewZenithAngle;
+    bool viewRayIntersectsGround;
+};
+LightPollutionTexVars scatteringTexIndicesToLightPollutionTexVars(const vec2 texIndices);
+
 #endif

@@ -947,6 +947,35 @@ void computeEclipsedDoubleScattering(const unsigned texIndex)
     std::cerr << "done\n";
 }
 
+void computeLightPollutionSingleScattering(const unsigned texIndex)
+{
+    std::cerr << indentOutput() << "Computing light pollution single scattering... ";
+
+    gl.glBindFramebuffer(GL_FRAMEBUFFER,fbos[FBO_LIGHT_POLLUTION]);
+    gl.glFramebufferTexture(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0, textures[TEX_LIGHT_POLLUTION],0);
+    checkFramebufferStatus("framebuffer for light pollution");
+
+    gl.glViewport(0, 0, atmo.lightPollutionTextureSize[0], atmo.lightPollutionTextureSize[1]);
+
+    const auto src=makeScattererDensityFunctionsSrc();
+    virtualSourceFiles[DENSITIES_SHADER_FILENAME]=src;
+    const auto program=compileShaderProgram("compute-light-pollution-single-scattering.frag",
+                                            "shader program to compute single scattering of light pollution");
+    program->bind();
+    setUniformTexture(*program,GL_TEXTURE_2D,TEX_TRANSMITTANCE,0,"transmittanceTexture");
+    renderQuad();
+
+    gl.glFinish();
+    std::cerr << "done\n";
+
+    gl.glBindFramebuffer(GL_FRAMEBUFFER,0);
+}
+
+void computeLightPollutionMultipleScattering(const unsigned texIndex)
+{
+    // TODO: implement
+}
+
 int main(int argc, char** argv)
 {
     [[maybe_unused]] UTF8Console utf8console;
@@ -1106,6 +1135,12 @@ int main(int argc, char** argv)
                 // sky color. Irradiance will also be needed when we want to draw the ground itself.
                 computeDirectGroundIrradiance(texIndex);
             }
+
+            computeLightPollutionSingleScattering(texIndex);
+            computeLightPollutionMultipleScattering(texIndex);
+            saveTexture(GL_TEXTURE_2D,textures[TEX_LIGHT_POLLUTION],"light pollution texture",
+                        atmo.textureOutputDir+"/light-pollution-wlset"+std::to_string(texIndex)+".f32",
+                        {atmo.lightPollutionTextureSize[0], atmo.lightPollutionTextureSize[1]});
 
             computeMultipleScattering(texIndex);
             if(opts.saveResultAsRadiance)
